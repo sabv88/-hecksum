@@ -16,14 +16,16 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <numeric>
+
 #define MAX_LOADSTRING 100
+
 namespace fs = std::filesystem;
 #pragma warning(disable : 4996)
 
-// Глобальные переменные:
-HINSTANCE hInst;                                // текущий экземпляр
-WCHAR szTitle[MAX_LOADSTRING];                  // Текст строки заголовка
-WCHAR szWindowClass[MAX_LOADSTRING];            // имя класса главного окна
+HINSTANCE hInst;                             
+WCHAR szTitle[MAX_LOADSTRING];                 
+WCHAR szWindowClass[MAX_LOADSTRING];           
 TCHAR* FolderPath;
 
 typedef struct
@@ -32,7 +34,6 @@ typedef struct
     TCHAR Hash[MAX_PATH];
 }FileHash;
 
-// Отправить объявления функций, включенных в этот модуль кода:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
@@ -46,16 +47,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
-    // TODO: Разместите код здесь.
-
-    
-
-    // Инициализация глобальных строк
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadStringW(hInstance, IDC_HECKSUM, szWindowClass, MAX_LOADSTRING);
     MyRegisterClass(hInstance);
 
-    // Выполнить инициализацию приложения:
     if (!InitInstance (hInstance, nCmdShow))
     {
         return FALSE;
@@ -65,7 +60,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     MSG msg;
 
-    // Цикл основного сообщения:
     while (GetMessage(&msg, nullptr, 0, 0))
     {
         if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
@@ -107,16 +101,13 @@ TCHAR* BrowseForFolder(HWND hwnd)
     LPITEMIDLIST pidl = SHBrowseForFolder(&bi);
     if (pidl != 0)
     {
-        // Get the name of the folder
         TCHAR path[MAX_PATH];
         if (SHGetPathFromIDList(pidl, path))
         {
-            // Set the text of the static control to the path
             SetWindowText(hwnd, path);
             FolderPath = path;
         }
 
-        // Free memory used
         IMalloc* imalloc = 0;
         if (SUCCEEDED(SHGetMalloc(&imalloc)))
         {
@@ -252,11 +243,37 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
        hWnd,     // Parent window
        NULL,       // No menu.
        (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE),
-       NULL);      // Pointer not needed.
+       NULL);  
+
+   HWND labelFolderHash = CreateWindow(
+       L"STATIC",  // Predefined class; Unicode assumed 
+       L"Контрольная сумма папки",      // Button text 
+       WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,  // Styles 
+       600,         // x position 
+       400,         // y position 
+       500,        // Button width
+       20,        // Button height
+       hWnd,     // Parent window
+       NULL,       // No menu.
+       (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE),
+       NULL);
+
+   HWND labelFolderList = CreateWindow(
+       L"STATIC",  // Predefined class; Unicode assumed 
+       L"Список файлов",      // Button text 
+       WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,  // Styles 
+       20,         // x position 
+       400,         // y position 
+       500,        // Button width
+       20,        // Button height
+       hWnd,     // Parent window
+       NULL,       // No menu.
+       (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE),
+       NULL);
 
    HWND labelResult = CreateWindow(
        L"EDIT",  // Predefined class; Unicode assumed 
-       L"хуй",      // Button text 
+       L"",      // Button text 
        WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,  // Styles 
        20,         // x position 
        40,         // y position 
@@ -295,7 +312,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
    HWND labelPathResult = CreateWindow(
        L"EDIT",  // Predefined class; Unicode assumed 
-       L"хуй",      // Button text 
+       L"",      // Button text 
        WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,  // Styles 
        600,         // x position 
        40,         // y position 
@@ -308,7 +325,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
    HWND labelFolderPathResult = CreateWindow(
        L"EDIT",  // Predefined class; Unicode assumed 
-       L"хуйgfgrf",      // Button text 
+       L"",      // Button text 
        WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,  // Styles 
        600,         // x position 
        200,         // y position 
@@ -319,11 +336,24 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
        (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE),
        NULL);
 
+   HWND labelFolderHashResult = CreateWindow(
+       L"EDIT",  // Predefined class; Unicode assumed 
+       L"",      // Button text 
+       WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,  // Styles 
+       600,         // x position 
+       500,         // y position 
+       500,        // Button width
+       40,        // Button height
+       hWnd,     // Parent window
+       (HMENU)118,       // No menu.
+       (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE),
+       NULL);
+
    HWND pathList = CreateWindow(
        L"LISTBOX",  // Predefined class; Unicode assumed 
        NULL,      // Button text 
        WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,  // Styles 
-       300,         // x position 
+       20,         // x position 
        500,         // y position 
        500,        // Button width
        200,        // Button height
@@ -427,19 +457,27 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             GetWindowText(hwndControl, StrA, 200);
 
             std::vector<std::string> list = ListFiles(TCHARToString(StrA));
+            std::vector<std::string> listHash;
+
+
             HWND hwndList = GetDlgItem(hWnd, 117);
+
+
             for (int i = 0; i < list.size(); i++)
             {
+                std::string hash = MD5::hash(readFile(list[i]));
                 int pos = (int)SendMessage(hwndList, LB_ADDSTRING, 0,
                     (LPARAM)StringToTCHAR(list[i]));
                 int posHash = (int)SendMessage(hwndList, LB_ADDSTRING, 0,
-                    (LPARAM)StringToTCHAR(MD5::hash(list[i])));
-                // Set the array index of the player as item data.
-                // This enables us to retrieve the item from the array
-                // even after the items are sorted by the list box.
+                    (LPARAM)StringToTCHAR(hash));
+                listHash.push_back(hash);
                 SendMessage(hwndList, LB_SETITEMDATA, pos, (LPARAM)i);
                 SendMessage(hwndList, LB_SETITEMDATA, posHash, (LPARAM)i);
             }
+
+            std::string result = std::accumulate(listHash.begin(), listHash.end(), std::string(""));
+            HWND hwndSumHash = GetDlgItem(hWnd, 118);
+            SetWindowText(hwndSumHash, StringToTCHAR(MD5::hash(result)));
         }
         break;
 
