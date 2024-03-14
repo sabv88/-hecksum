@@ -452,10 +452,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             HWND hwndControl = GetDlgItem(hWnd, 116);
             TCHAR* a = BrowseForFolder(hwndControl);
+            if (a == NULL) 
+            {
+                break;
+            }
             std::string ab = TCHARToString(a);
             TCHAR StrA[200];
             GetWindowText(hwndControl, StrA, 200);
-
             std::vector<std::string> list = ListFiles(TCHARToString(StrA));
             std::vector<std::string> listHash;
 
